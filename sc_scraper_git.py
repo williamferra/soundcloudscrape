@@ -86,7 +86,7 @@ reposts = []
 comments = []
 username = []
 
-for i in range(1206,numURLS):
+for i in range(0,numURLS):
 
     #Iterate through individual item(
     single = urls[i]
