@@ -5,6 +5,7 @@ import re
 import csv
 import os
 import pandas as pd
+import numpy as np
 
 #Read in urls
 scurls = open("scurls.txt")
@@ -14,7 +15,7 @@ numURLS = len(urls)
 
 #Get raw URL text
 def getText (url): 
-    track  = requests.get(url)
+    track  = requests.get(url,timeout=5)
     data = track.content
     soup = BeautifulSoup(data)
     txt = soup.text #turn the text into usable
@@ -22,10 +23,13 @@ def getText (url):
 
 #Followers
 def followerGet (txt):
-    spot_fl = txt.find("followers_count") #Find where follower count starts
+    txt_str =''.join(txt) #Convert to string
+    spot_fl = txt_str.find("followers_count") #Find where follower count starts
     lengthfl = len("followers_count")
-    followstring = (txt[(spot_fl+lengthfl+2):(spot_fl+lengthfl+10)]) #Assuming no one has over 1bil followers this returns the string after
-
+    followstring = (txt_str[(spot_fl+lengthfl+2):(spot_fl+lengthfl+10)]) #Assuming no one has over 1bil followers this returns the string after
+    followers = re.sub("[^0-9]", "", followstring)
+    followers = int(followers)
+    return[followers]
 
 #Likes
 def likesGet (txt):
@@ -65,36 +69,50 @@ def commentsGet (txt):
     comments = int(comments)
     return[comments]
 
+#Username
+def userGet (txt):
+    spot_user = txt.find("by")
+    spot_user
+    spot_user2 = txt.find("|")
+    spot_user2
+    username = txt[spot_user+2:spot_user2]
+    return[username]
+
 #Define columns 
 followers = [] 
 likes = [] 
 plays = [] 
 reposts = []
 comments = []
+username = []
 
-for i in range(1,numURLS):
+for i in range(1206,numURLS):
 
-    #Iterate through individual item
+    #Iterate through individual item(
     single = urls[i]
 
     #Convert txt into proper format
     txt = getText(single)
     txt = ''.join(txt)
 
-    followers.append(followerGet(txt))
+    username.append(userGet(txt))
+    followers.append(followerGet(txt)) 
     likes.append(likesGet(txt))
     plays.append(playsGet(txt))
     reposts.append(repostsGet(txt))
     comments.append(commentsGet(txt))
     
     #Get information from text
-    print(single, " Followers: ", followerGet(txt), " Likes: ", likesGet(txt), " Plays: ", playsGet(txt), " Reposts: ", repostsGet(txt), " Comments: ", commentsGet(txt))
+    print(i, single, "Username: ", userGet(txt), " Followers: ", followerGet(txt), " Likes: ", likesGet(txt), " Plays: ", playsGet(txt), " Reposts: ", repostsGet(txt), " Comments: ", commentsGet(txt))
 
-toSave = {'Followers': followers, 
-'Likes': likes,
-'Plays': plays,
-'Reposts': reposts,
-'Comments': comments
-}
 
-df = pd.DataFrame(toSave)
+u1 = pd.Series(username, name='Username')
+f1 = pd.Series(followers, name = 'Followers')
+l1 = pd.Series(likes, name='Likes')
+p1 = pd.Series(plays, name='Plays')
+r1 = pd.Series(reposts, name='Reposts')
+c1 = pd.Series(comments, name='Comments')
+df = pd.concat([u1,f1,l1,p1,r1,c1,], axis=1)
+
+df = df.dropna()
+df.to_csv('output2.csv')
