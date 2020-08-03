@@ -117,6 +117,3 @@ new_dat <- data.frame(Genre='Dance',Followers=log(2000),Plays=log(17000))
 exp(predict(model_lp,new_dat,interval='confidence'))
 exp(predict(model_rp,new_dat,interval='confidence'))
 exp(predict(model_cp,new_dat,interval='confidence'))
-
-#Shiny App
-
